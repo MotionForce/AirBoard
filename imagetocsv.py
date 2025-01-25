@@ -13,9 +13,14 @@ def process_frame(image: cv2.Mat, character: str) -> dict:
     with mp_hands.Hands(static_image_mode=True, max_num_hands=2, min_detection_confidence=0.5) as hands:
         results = hands.process(np.array(image_rgb))
 
+<<<<<<< HEAD
+image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+print(image_rgb)
+=======
     if results.multi_hand_landmarks:
         for hand_landmarks, handedness in zip(results.multi_hand_landmarks, results.multi_handedness):
             hand_label = handedness.classification[0].label
+>>>>>>> 52745f389a4d4d9cbacc419e90de67d77f695c7c
 
             landmark_array = []
             for landmark in hand_landmarks.landmark:
