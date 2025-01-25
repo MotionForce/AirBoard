@@ -44,7 +44,14 @@ def write_to_csv(data: dict):
             writer.writerow(hand)
 
 
-def capture_character(character: str, countdown=3, repetitions=50) -> list:
+def capture_character(character: str, countdown=3, repetitions=50, wait_time=5) -> list:
+    for remaining in range(wait_time, 0, -1):
+            sys.stdout.write("\r")
+            sys.stdout.write(f"{remaining} seconds remaining.")
+            sys.stdout.flush()
+            time.sleep(1)
+    if wait_time == 0:
+        time.sleep(0.1)
     for i in range(repetitions):
         print(f"{character}: {i + 1}")
         for remaining in range(countdown, 0, -1):
@@ -52,17 +59,26 @@ def capture_character(character: str, countdown=3, repetitions=50) -> list:
             sys.stdout.write(f"{remaining} seconds remaining.")
             sys.stdout.flush()
             time.sleep(1)
+        if countdown == 0:
+            time.sleep(0.1)
         print("\nCapturing frame...")
         frame = snap_picture()
         res = process_frame(frame, character)
         write_to_csv(res)
 
 
-def cycle_characters(characters: str, countdown=3, repetitions=50):
+def cycle_characters(characters: str, countdown=3, repetitions=50, wait_time=5):
     for character in characters:
         logging.warning(f"Changing the captured character to '{character}'")
-        time.sleep(3)
-        capture_character(character, countdown, repetitions)
+        capture_character(character, countdown, repetitions, wait_time)
+
+
+def manual_capture(countdown=3, repetitions=1, wait_time=5):
+    while True:
+        character = input("Enter the character to capture (or 'exit' to exit): ")
+        if character == "exit":
+            break
+        capture_character(character, countdown, repetitions, wait_time)
 
 
 if __name__ == "__main__":
@@ -71,10 +87,12 @@ if __name__ == "__main__":
     )
     arg_parse.add_argument("--width", type=int, default=640, help="Width of the images taken")
     arg_parse.add_argument("--height", type=int, default=480, help="Height of the images taken")
-    arg_parse.add_argument("--characters_to_cycle", type=str, default=DEFAULT_CHARACTERS, help="Characters to capture, separated by underscores")
-    arg_parse.add_argument("--frames_per_character", type=int, default=50, help="Number of frames to repeat capture for each character")
+    arg_parse.add_argument("--characters-to-cycle", type=str, default=DEFAULT_CHARACTERS, help="Characters to capture, separated by underscores")
+    arg_parse.add_argument("--frames-per-character", type=int, default=50, help="Number of frames to repeat capture for each character")
     arg_parse.add_argument("--countdown", type=int, default=3, help="Number of seconds to wait before capturing the frame")
     arg_parse.add_argument("--debug", type=bool, default=False, help="Enable debug logging")
+    arg_parse.add_argument("--manual", type=bool, default=False, help="Enable per frame manual character capture")
+    arg_parse.add_argument("--pre-cycle-wait", type=int, default=5, help="Number of seconds to wait before starting the character cycle")
     args = arg_parse.parse_args()
 
     if args.debug:
@@ -95,11 +113,13 @@ if __name__ == "__main__":
     cap.set(cv2.CAP_PROP_FRAME_HEIGHT, args.height)
     logging.debug(f"Video device resolution set to {args.width}x{args.height}")
 
-    characters_to_cycle = args.characters_to_cycle.split("_")
-
-    cycle_characters(characters_to_cycle, args.countdown, args.frames_per_character)
+    if args.manual:
+        logging.info("Starting manual character capture")
+        manual_capture(args.countdown, args.frames_per_character, args.pre_cycle_wait)
+    else:
+        logging.info("Starting character cycling")
+        characters_to_cycle = args.characters_to_cycle.split("_")
+        cycle_characters(characters_to_cycle, args.countdown, args.frames_per_character, args.pre_cycle_wait)
 
     cap.release()
     cv2.destroyAllWindows()
-
-    # frame = snap_picture(args.width, args.height)
