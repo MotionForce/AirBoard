@@ -1,30 +1,27 @@
 import cv2
 
-print("starting")
+def snap_picture():
+    cap = cv2.VideoCapture(0)
 
-# Initialize the webcam
-cap = cv2.VideoCapture(0)
+    if not cap.isOpened():
+        raise Exception("Could not open video device")
 
-# Check if the webcam is opened correctly
-if not cap.isOpened():
-    raise Exception("Could not open video device")
+    cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
+    cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
 
-# Set video frame width and height
-cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
-cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
+    ret, frame_in = cap.read()
 
-# Capture a single frame
-ret, frame = cap.read()
+    if not ret:
+        raise Exception("Could not read frame")
 
-# Check if frame is captured
-if not ret:
-    raise Exception("Could not read frame")
+    # DEBUG: Save the captured frame
+    # cv2.imwrite('captured_image.jpg', frame)
 
-# Save the captured image to a file
-# cv2.imwrite('captured_image.jpg', frame)
+    cap.release()
+    cv2.destroyAllWindows()
 
-# Release the webcam
-cap.release()
+    return frame_in
 
-# Close all OpenCV windows
-cv2.destroyAllWindows()
+
+if __name__ == "__main__":
+    frame = snap_picture()
