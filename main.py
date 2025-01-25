@@ -7,11 +7,6 @@ import cv2
 
 from imagetocsv import process_frame
 
-cap = cv2.VideoCapture(0)
-
-if not cap.isOpened():
-    raise Exception("Could not open video device")
-
 
 def snap_picture(width=640, height=480) -> cv2.UMat:
     ret, frame_in = cap.read()
@@ -20,7 +15,7 @@ def snap_picture(width=640, height=480) -> cv2.UMat:
         raise Exception("Could not read frame")
 
     # DEBUG: Save the captured frame
-    # cv2.imwrite('captured_image.jpg', frame_in)
+    cv2.imwrite('captured_image.jpg', frame_in)
 
     # DEBUG: Display the captured frame
     # cv2.imshow('frame', frame_in)
@@ -61,6 +56,11 @@ def cycle_characters(characters: str, countdown=3, repetitions=50):
 
 
 if __name__ == "__main__":
+    cap = cv2.VideoCapture(0)
+
+    if not cap.isOpened():
+        raise Exception("Could not open video device")
+    print("Video device opened")
     arg_parse = argparse.ArgumentParser()
     arg_parse.add_argument("--height", type=int, default=480)
     arg_parse.add_argument("--width", type=int, default=640)
