@@ -7,16 +7,13 @@ import cv2
 
 from imagetocsv import process_frame
 
+cap = cv2.VideoCapture(0)
+
+if not cap.isOpened():
+    raise Exception("Could not open video device")
+
 
 def snap_picture(width=640, height=480) -> cv2.UMat:
-    cap = cv2.VideoCapture(0)
-
-    if not cap.isOpened():
-        raise Exception("Could not open video device")
-
-    cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
-    cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
-
     ret, frame_in = cap.read()
 
     if not ret:
@@ -28,9 +25,6 @@ def snap_picture(width=640, height=480) -> cv2.UMat:
     # DEBUG: Display the captured frame
     # cv2.imshow('frame', frame_in)
     # cv2.waitKey(0)
-
-    cap.release()
-    cv2.destroyAllWindows()
 
     return frame_in
 
@@ -75,6 +69,12 @@ if __name__ == "__main__":
     arg_parse.add_argument("--countdown", type=int, default=3)
     args = arg_parse.parse_args()
 
+    cap.set(cv2.CAP_PROP_FRAME_WIDTH, args.width)
+    cap.set(cv2.CAP_PROP_FRAME_HEIGHT, args.height)
+
     cycle_characters(args.characters_to_cycle, args.countdown, args.frames_per_character)
+
+    cap.release()
+    cv2.destroyAllWindows()
 
     # frame = snap_picture(args.width, args.height)
