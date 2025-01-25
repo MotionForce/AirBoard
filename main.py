@@ -1,8 +1,12 @@
 import argparse
+import csv
 import sys
 import time
 
 import cv2
+
+from imagetocsv import process_frame
+
 
 def snap_picture(width=640, height=480) -> cv2.UMat:
     cap = cv2.VideoCapture(0)
@@ -31,9 +35,21 @@ def snap_picture(width=640, height=480) -> cv2.UMat:
     return frame_in
 
 
+def write_to_csv(data: dict):
+    print(data)
+    for hand in data["left"]:
+        with open("left_hand.csv", mode="a", newline="") as file:
+            writer = csv.writer(file)
+            writer.writerow(hand)
+    for hand in data["right"]:
+        with open("right_hand.csv", mode="a", newline="") as file:
+            writer = csv.writer(file)
+            writer.writerow(hand)
+
+
 def capture_character(character: str, countdown=3, repetitions=50) -> list:
     for i in range(repetitions):
-        print(f"{character}: {i+1}")
+        print(f"{character}: {i + 1}")
         for remaining in range(countdown, 0, -1):
             sys.stdout.write("\r")
             sys.stdout.write(f"{remaining} seconds remaining.")
@@ -41,11 +57,14 @@ def capture_character(character: str, countdown=3, repetitions=50) -> list:
             time.sleep(1)
         print("\nCapturing frame...")
         frame = snap_picture()
-        # TODO: Analyze the frame using MediaPipe
+        res = process_frame(frame, character)
+        write_to_csv(res)
+
 
 def cycle_characters(characters: str, countdown=3, repetitions=50):
     for character in characters:
         capture_character(character, countdown, repetitions)
+
 
 if __name__ == "__main__":
     arg_parse = argparse.ArgumentParser()
@@ -59,4 +78,3 @@ if __name__ == "__main__":
     cycle_characters(args.characters_to_cycle, args.countdown, args.frames_per_character)
 
     # frame = snap_picture(args.width, args.height)
-
