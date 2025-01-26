@@ -1,33 +1,64 @@
 import cv2
 import mediapipe as mp
 import numpy as np
-import tensorflow as tf
+# import tensorflow as tf
+import dearpygui.dearpygui as dpg
 
 mp_hands = mp.solutions.hands
 mp_drawing = mp.solutions.drawing_utils
 
-model_left = tf.keras.models.load_model('models/final_left.keras')
-model_right = tf.keras.models.load_model('models/final_right.keras')
+# model_left = tf.keras.models.load_model('models/final_left.keras')
+# model_right = tf.keras.models.load_model('models/final_right.keras')
 
-cap = cv2.VideoCapture(0) 
+dpg.create_context()
+dpg.create_viewport(title='AirBoard', width=1280, height=720)
+dpg.setup_dearpygui()
 
-cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
-cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
+print("Creating video capture object...")
+cap = cv2.VideoCapture(0)
+ret, frame = cap.read()
 
-if not cap.isOpened():
-    print("Error: Could not open video stream.")
-else:
-    print("Press 'q' to quit.")
+frame_width = int(cap.get(3))
+frame_height = int(cap.get(4))
+cap_fps = int(cap.get(5))
 
-# Capture frames in a loop
-while True:
-    ret, frame = cap.read()  # Read a single frame
+print(f"Frame width: {frame_width}, Frame height: {frame_height}, FPS: {cap_fps}")
+
+frame_rgba = cv2.cvtColor(frame, cv2.COLOR_BGR2RGBA)
+frame_rgba = frame_rgba.astype(np.float32) / 255.0
+frame_rgba_flat = frame_rgba.flatten()
+
+with dpg.texture_registry(show=False):
+    dpg.add_raw_texture(width=frame_width, height=frame_height, default_value=frame_rgba_flat,
+                        format=dpg.mvFormat_Float_rgba, tag="texture_tag")
+
+with dpg.window(label="Webcam capture", width=720, height=480):
+    dpg.add_text("AirBoard")
+    dpg.add_image("texture_tag")
+    dpg.set_item_width("texture_tag", 640)
+    dpg.set_item_height("texture_tag", 360)
+
+with dpg.window(label="Key presses", width=720, height=480, pos=(450, 125)):
+    pass
+
+dpg.show_metrics()
+dpg.show_viewport()
+
+while dpg.is_dearpygui_running():
+    ret, frame = cap.read()
+
     if not ret:
         print("Failed to capture frame.")
         break
 
+    frame_rgba = cv2.cvtColor(frame, cv2.COLOR_BGR2RGBA)
+    frame_rgba = frame_rgba.astype(np.float32) / 255.0
+    frame_rgba_flat = frame_rgba.flatten()
+
+    dpg.set_value("texture_tag", frame_rgba_flat)
+
     image_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-    data = {"left": [], "right": []}
+    single_data = {"left": [], "right": []}
 
     with mp_hands.Hands(static_image_mode=True, max_num_hands=2, min_detection_confidence=0.5) as hands:
         results = hands.process(np.array(image_rgb))
@@ -40,16 +71,16 @@ while True:
             for landmark in hand_landmarks.landmark:
                 landmark_array.extend([landmark.x, landmark.y, landmark.z])
 
-            data["left" if hand_label == "Left" else "right"].append(landmark_array)
-
-
+            single_data["left" if hand_label == "Left" else "right"].append(landmark_array)
+        print(single_data)
     else:
         print("No hands detected.")
 
-    # Exit the loop when 'q' is pressed
-    if cv2.waitKey(1) & 0xFF == ord('q'):
-        break
+    # Render the frame
+    dpg.render_dearpygui_frame()
 
-# Release the video stream and close windows
+dpg.start_dearpygui()
+
 cap.release()
 cv2.destroyAllWindows()
+dpg.destroy_context()
