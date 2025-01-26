@@ -2,6 +2,7 @@ import pyautogui as p
 import time
 import tensorflow as tf
 from tensorflow.keras import layers, models
+import numpy as np
 
 # Load the MNIST dataset
 (x_train, y_train), (x_test, y_test) = tf.keras.datasets.mnist.load_data()
@@ -34,3 +35,16 @@ model.fit(x_train, y_train, epochs=5, batch_size=32)
 # Evaluate the model
 test_loss, test_accuracy = model.evaluate(x_test, y_test)
 print(f"Test Accuracy: {test_accuracy:.2f}")
+
+sample_image = np.expand_dims(x_test[0], axis=0)  # Add batch dimension
+
+# Perform inference
+predictions = model.predict(sample_image)
+
+# Process the output
+predicted_class = np.argmax(predictions, axis=1)  # Get the class with the highest probability
+print(f"Predicted Class: {predicted_class[0]}")
+
+# Verify the actual class
+actual_class = y_test[0]
+print(f"Actual Class: {actual_class}")
