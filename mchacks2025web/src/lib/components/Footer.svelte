@@ -5,8 +5,8 @@
 
 </script>
 
-<footer class="bg-[#9CADBC]">
-    <button onclick={creditsAlert}>
+<footer class="bg-[#394955]">
+    <button class="text-[#9cadbc]" onclick={creditsAlert}>
         Credits
     </button>
 </footer>

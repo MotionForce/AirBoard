@@ -2,8 +2,8 @@
     let {color} = $props();
 </script>
 
-<div class="drop-shadow-lg">
-    <svg height="547.16" width="1438" xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="17 17 640 307.37054">
+<div class="drop-shadow-lg h-full">
+    <svg height="547.16" width="1438" xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="17 17 600 307.37054">
         <g stroke="{color}" fill="none">
             <g stroke-width="2">
                 <rect height="40" width="40" y="40.685" x="118.53"/>
