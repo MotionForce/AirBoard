@@ -8,7 +8,7 @@
 
 <div class="flex flex-col space-y-2 p-10 py-64 items-center align-middle bg-[#9CADBC]">
     <h1 class="text-9xl tracking-wide">AirBoard</h1>
-    <p class="text-2xl">A keyboard. Without the keys. Or the board.</p>
+    <p class="text-2xl">A keyboard without the keys. Or the board.</p>
     <button class="border-2 rounded-md p-2 bg-white" onclick={scrollToTutorial}>Start typing!</button>
 </div>
 
