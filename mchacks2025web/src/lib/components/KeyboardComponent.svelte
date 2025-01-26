@@ -1,6 +1,8 @@
 <script>
     import Keyboard from "$lib/components/svg/Keyboard.svelte";
-    import {onMount} from "svelte";
+    import {onMount, onDestroy} from 'svelte';
+
+    let {color} = $props();
 
     const charToIdMap = {
         // First row (numbers/symbols)
@@ -51,6 +53,7 @@
         "↵": "rect72",   // Enter
 
         // Fourth row (ZXCV...)
+        "shift": "rect84",
         "z": "rect73",
         "x": "rect74",
         "c": "rect75",
@@ -67,21 +70,30 @@
         "space": "rect88",   // Space
     };
 
-    let highlightColor = '#00ff00';
+    let highlightColor = '#469dd7';
 
+    let char = $state('');
 
-    let selectedId = $state();
+    let selectedId = $derived(charToIdMap[char]);
+    
+    const handleKeypress = (event) => {
+        console.log(event.key); // You can log to the console or do something else with the data
+        char = event.key;
+    };
 
-    let text = $state("");
+    // Add event listener on mount
+    onMount(() => {
+        window.addEventListener('keydown', handleKeypress);
 
-    function set_selected_id(char) {
-        console.log(charToIdMap[char]);
-        selectedId = charToIdMap[char];
-    }
+        // Cleanup on destroy
+        onDestroy(() => {
+            window.removeEventListener('keydown', handleKeypress);
+        });
+    });
 </script>
 
-{text}
-{selectedId}
-<input type="text" id="selectedId" bind:value={text} oninput={() => set_selected_id(text)}>
-
-<Keyboard color="white" targetId={selectedId} targetColor={highlightColor}/>
+{char}
+<!--{text}-->
+<!--{selectedId}-->
+<!--<input type="text" id="selectedId" bind:value={text} oninput={() => set_selected_id(text)}>-->
+<Keyboard color={color} targetId={selectedId} targetColor={highlightColor}/>

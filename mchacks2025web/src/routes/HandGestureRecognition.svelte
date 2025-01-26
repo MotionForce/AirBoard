@@ -1,12 +1,12 @@
 <script lang="ts">
     import { onMount, onDestroy } from 'svelte';
-    
+    import KeyboardComponent from "$lib/components/KeyboardComponent.svelte";
+
     let videoElement: HTMLImageElement;
     let websocket: WebSocket;
     let handData: { left: number[][], right: number[][] } = { left: [], right: [] };
     let isConnected = false;
     let errorMessage = '';
-    let keystrokes = '';
 
     onMount(() => {
         connectWebSocket();
@@ -35,10 +35,6 @@
                 if (data.hand_data) {
                     handData = data.hand_data;
                 }
-                if (data.keystrokes) {
-                    keystrokes = data.keystrokes;
-                    logKeystrokes(data.keystrokes);
-                }
             } catch (error) {
                 console.error('Error processing message:', error);
             }
@@ -56,16 +52,11 @@
             setTimeout(connectWebSocket, 5000);
         };
     }
-
-    function logKeystrokes(keystroke: string) {
-        console.log(`Keystroke logged: ${keystroke}`);
-        // Implement additional logging logic here if needed
-    }
 </script>
 
 <div class="container mx-auto p-4">
     <h1 class="text-2xl font-bold mb-4">Hand Gesture Recognition</h1>
-    
+
     {#if errorMessage}
         <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4" role="alert">
             <p>{errorMessage}</p>
@@ -83,7 +74,7 @@
                 />
             </div>
         </div>
-        
+
         <div class="flex-1">
             <div class="bg-gray-100 p-4 rounded-lg">
                 <h2 class="text-xl font-semibold mb-2">Hand Data</h2>
@@ -98,7 +89,7 @@
                             <p class="text-gray-500">No left hand detected</p>
                         {/if}
                     </div>
-                    
+
                     <div>
                         <h3 class="font-medium">Right Hand</h3>
                         {#if handData.right.length > 0}
@@ -108,6 +99,11 @@
                         {:else}
                             <p class="text-gray-500">No right hand detected</p>
                         {/if}
+                    </div>
+
+                    <div>
+                        <h3 class="font-medium">Visualizer</h3>
+                        <KeyboardComponent color="black"/>
                     </div>
                 </div>
             </div>

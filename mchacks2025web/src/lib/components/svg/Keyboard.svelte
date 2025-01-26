@@ -175,6 +175,7 @@
                                         x={rect.x}
                                         id={rect.id}
                                         stroke={targetColor}
+                                        fill={targetColor}
                                 />
                             {/if}
                         {/each}
