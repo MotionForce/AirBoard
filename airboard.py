@@ -38,8 +38,11 @@ async def video_stream(websocket):
                     landmarks = [(landmark.x, landmark.y, landmark.z) for landmark in hand_landmarks.landmark]
                     hand_data["left" if hand_label == "Left" else "right"].append(landmarks)
 
-            # Send both video and hand data
-            await websocket.send(json.dumps({"frame": jpg_as_text, "hand_data": hand_data}))
+            # Predict keystrokes (this is a placeholder, replace with your actual prediction logic)
+            keystrokes = "example_keystroke"  # Replace with actual keystroke prediction
+
+            # Send both video, hand data, and keystrokes
+            await websocket.send(json.dumps({"frame": jpg_as_text, "hand_data": hand_data, "keystrokes": keystrokes}))
             await asyncio.sleep(1/10)
 
 async def server_main():
