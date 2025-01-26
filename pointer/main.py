@@ -1,5 +1,6 @@
 import os
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3' 
+
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 import argparse
 import csv
 import math
@@ -11,15 +12,14 @@ import pyautogui as pag
 import mediapipe as mp
 import numpy as np
 
-
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     datefmt='%Y-%m-%d %H:%M:%S'
 )
 
-#DEFAULT_CHARACTERS = "a_b_c_d_e_f_g_h_i_j_k_l_m_n_o_p_q_r_s_t_u_v_w_x_y_z_space_backspace"
-DEFAULT_CHARACTERS = "a_b_c"
+DEFAULT_CHARACTERS = "a_b_c_d_e_f_g_h_i_j_k_l_m_n_o_p_q_r_s_t_u_v_w_x_y_z_space_backspace"
+# DEFAULT_CHARACTERS = "1_2_3_4_5_6_7_8_9_0"
 TYPE_DELAY = 0.5
 DEPTH_THRESHOLD = 0.035
 
@@ -44,7 +44,7 @@ config = {
         6: [],
         8: [],
     },
-    "points":[
+    "points": [
 
     ]
 }
@@ -52,7 +52,8 @@ config = {
 mp_hands = mp.solutions.hands
 mp_drawing = mp.solutions.drawing_utils
 
-def get_index_tip(image: cv2.Mat, hand_count: int=1) -> list:
+
+def get_index_tip(image: cv2.Mat, hand_count: int = 1) -> list:
     image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 
     with mp_hands.Hands(static_image_mode=True, max_num_hands=hand_count, min_detection_confidence=0.5) as hands:
@@ -62,16 +63,17 @@ def get_index_tip(image: cv2.Mat, hand_count: int=1) -> list:
 
     if results.multi_hand_landmarks:
         for hand_landmarks, handedness in zip(results.multi_hand_landmarks, results.multi_handedness):
-
             index_tip = hand_landmarks.landmark[8]
             palm = hand_landmarks.landmark[0]
-            entry.append([index_tip.x, index_tip.y, index_tip.z, palm.z, 0 if handedness.classification[0].label == "Left" else 1])
+            entry.append([index_tip.x, index_tip.y, index_tip.z, palm.z,
+                          0 if handedness.classification[0].label == "Left" else 1])
     else:
         print("No hands detected.")
 
     return entry
 
-def get_landmarks(image: cv2.Mat, hand_count: int=1) -> list:
+
+def get_landmarks(image: cv2.Mat, hand_count: int = 1) -> list:
     image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 
     with mp_hands.Hands(static_image_mode=True, max_num_hands=hand_count, min_detection_confidence=0.5) as hands:
@@ -82,10 +84,16 @@ def get_landmarks(image: cv2.Mat, hand_count: int=1) -> list:
     else:
         print("No hands detected.")
 
+
 def process_character(image: cv2.Mat, character: str) -> list:
-    coords = get_index_tip(image)[0]
-    coords.append(character)
-    return coords
+    coords = get_index_tip(image)
+    if not coords:  # Check if the list is empty
+        logging.error("No hands detected. Skipping this frame.")
+        return []  # Return an empty list or handle appropriately
+    coords[0].append(character)  # Access the first element if it exists
+    return coords[0]
+
+
 
 def snap_picture() -> cv2.UMat:
     ret, frame_in = cap.read()
@@ -101,7 +109,8 @@ def snap_picture() -> cv2.UMat:
     # cv2.waitKey(0)
 
     return frame_in
-    
+
+
 def load_config(file: str) -> dict:
     config = {}
     config["points"] = []
@@ -117,10 +126,10 @@ def load_config(file: str) -> dict:
 
 def capture_character(character: str, countdown=3, repetitions=50, wait_time=5) -> list:
     for remaining in range(wait_time, 0, -1):
-            sys.stdout.write("\r")
-            sys.stdout.write(f"{remaining} seconds remaining.")
-            sys.stdout.flush()
-            time.sleep(1)
+        sys.stdout.write("\r")
+        sys.stdout.write(f"{remaining} seconds remaining.")
+        sys.stdout.flush()
+        time.sleep(1)
     if wait_time == 0:
         time.sleep(0.1)
     for i in range(repetitions):
@@ -135,8 +144,11 @@ def capture_character(character: str, countdown=3, repetitions=50, wait_time=5) 
         print("\nCapturing frame...")
         frame = snap_picture()
         res = process_character(frame, character)
+        if not res:
+            logging.warning("Skipping frame due to missing hand detection.")
+            continue
         config["points"].append(res)
-        
+
 
 
 def cycle_characters(characters: str, countdown=3, repetitions=50, wait_time=5):
@@ -159,11 +171,14 @@ if __name__ == "__main__":
     )
     arg_parse.add_argument("--width", type=int, default=640, help="Width of the images taken")
     arg_parse.add_argument("--height", type=int, default=480, help="Height of the images taken")
-    arg_parse.add_argument("--characters-to-cycle", type=str, default=DEFAULT_CHARACTERS, help="Characters to capture, separated by underscores")
-    arg_parse.add_argument("--countdown", type=int, default=0, help="Number of seconds to wait before capturing the frame")
+    arg_parse.add_argument("--characters-to-cycle", type=str, default=DEFAULT_CHARACTERS,
+                           help="Characters to capture, separated by underscores")
+    arg_parse.add_argument("--countdown", type=int, default=0,
+                           help="Number of seconds to wait before capturing the frame")
     arg_parse.add_argument("--debug", type=bool, default=False, help="Enable debug logging")
     arg_parse.add_argument("--manual", type=bool, default=False, help="Enable per frame manual character capture")
-    arg_parse.add_argument("--pre-cycle-wait", type=int, default=5, help="Number of seconds to wait before starting the character cycle")
+    arg_parse.add_argument("--pre-cycle-wait", type=int, default=5,
+                           help="Number of seconds to wait before starting the character cycle")
     arg_parse.add_argument("--train", type=bool, default=False, help="Whether to start using AirBoard")
     args = arg_parse.parse_args()
 
@@ -175,7 +190,7 @@ if __name__ == "__main__":
     logging.debug(f"Arguments: {args}")
 
     logging.info("Opening video device")
-    cap = cv2.VideoCapture(0)
+    cap = cv2.VideoCapture(1)
     if not cap.isOpened():
         raise Exception("Could not open video device")
     logging.debug("Video device opened")
@@ -242,13 +257,13 @@ if __name__ == "__main__":
                 continue
             current_time = time.time()
             hand = hand_instance[1].classification[0].label
-            
+
             time_since_last_activation = current_time - last_activation_time[hand]
             if time_since_last_activation < TYPE_DELAY:
-                    continue
+                continue
 
             # Update the last activation time for the hand
-            
+
             x = hand_instance[0].landmark[8].x
             y = hand_instance[0].landmark[8].y
             zeight = hand_instance[0].landmark[8].z
@@ -266,7 +281,7 @@ if __name__ == "__main__":
             if depth_pos == "pressing":
                 character = 'none'
                 for row in config["points"]:
-                    distance = math.sqrt((x - float(row[0]))**2 + (y - float(row[1]))**2)
+                    distance = math.sqrt((x - float(row[0])) ** 2 + (y - float(row[1])) ** 2)
                     if distance < flat_distance:
                         flat_distance = distance
                         character = row[5]
@@ -274,7 +289,6 @@ if __name__ == "__main__":
                 pag.press(character)
             else:
                 logging.info("Not pressing")
-
 
     cap.release()
     cv2.destroyAllWindows()

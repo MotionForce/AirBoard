@@ -6,7 +6,7 @@ from keras.models import load_model
 
 num_landmarks = 21
 num_features = 3
-
+3
 # Load the test data
 test_csv_file = 'left_hand.csv'  # Replace with your test CSV file path
 test_data = pd.read_csv(test_csv_file, header=None)
