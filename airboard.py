@@ -1,5 +1,6 @@
 import asyncio
 import base64
+import json
 
 import cv2
 import mediapipe as mp
@@ -27,7 +28,18 @@ async def video_stream(websocket):
             _, buffer = cv2.imencode('.jpg', in_frame)
             jpg_as_text = base64.b64encode(buffer).decode('utf-8')
 
-            await websocket.send(jpg_as_text)
+            # Process hand data
+            image_rgb = cv2.cvtColor(in_frame, cv2.COLOR_BGR2RGB)
+            results = mp_hands.Hands().process(image_rgb)
+            hand_data = {"left": [], "right": []}
+            if results.multi_hand_landmarks:
+                for hand_landmarks, handedness in zip(results.multi_hand_landmarks, results.multi_handedness):
+                    hand_label = handedness.classification[0].label
+                    landmarks = [landmark.x, landmark.y, landmark.z for landmark in hand_landmarks.landmark]
+                    hand_data["left" if hand_label == "Left" else "right"].append(landmarks)
+
+            # Send both video and hand data
+            await websocket.send(json.dumps({"frame": jpg_as_text, "hand_data": hand_data}))
             await asyncio.sleep(1/10)
 
 async def server_main():

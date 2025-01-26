@@ -27,8 +27,13 @@
 
         websocket.onmessage = (event) => {
             try {
-                // airboard.py sends raw base64 string
-                videoElement.src = `data:image/jpeg;base64,${event.data}`;
+                const data = JSON.parse(event.data);
+                if (data.frame) {
+                    videoElement.src = `data:image/jpeg;base64,${data.frame}`;
+                }
+                if (data.hand_data) {
+                    handData = data.hand_data;
+                }
             } catch (error) {
                 console.error('Error processing message:', error);
             }
