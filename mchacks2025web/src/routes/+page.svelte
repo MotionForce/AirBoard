@@ -7,22 +7,22 @@
         document.getElementById("tutorial").scrollIntoView({behavior: "smooth"});
     }
 </script>
-
-<!--<main class="min-h-screen bg-gray-50">-->
-<!--    <HandGestureRecognition />-->
-<!--</main>-->
-<KeyboardComponent/>
+<!--<KeyboardComponent/>-->
 
 <div class="flex flex-col p-10 py-64 items-center align-middle bg-[#9CADBC]">
     <h1 class="text-9xl mb-2 typewriter w-fit">AirBoard</h1>
     <p class="text-2xl mb-7">A keyboard without the keys. Or the board.</p>
     <button class="border-2 border-cyan-700 rounded-full p-3 bg-cyan-100 saturate-50" onclick={scrollToTutorial}>Start typing!</button>
 </div>
+<main class="min-h-screen bg-gray-50">
+    <HandGestureRecognition />
+</main>
+
 
 <!--<div id="tutorial" class="bg-[#9CADBC] p-24 h-screen flex align-middle">-->
-<div id="tutorial" class="bg-[#394955] p-24 h-screen flex align-middle">
+<!--<div id="/tutorial" class="bg-[#394955] p-24 h-screen flex align-middle">-->
 <!--    <Tutorial/>-->
-</div>
+<!--</div>-->
 
 <style>
     .typewriter {

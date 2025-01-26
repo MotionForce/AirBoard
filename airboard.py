@@ -35,7 +35,7 @@ async def video_stream(websocket):
             if results.multi_hand_landmarks:
                 for hand_landmarks, handedness in zip(results.multi_hand_landmarks, results.multi_handedness):
                     hand_label = handedness.classification[0].label
-                    landmarks = [landmark.x, landmark.y, landmark.z for landmark in hand_landmarks.landmark]
+                    landmarks = [(landmark.x, landmark.y, landmark.z) for landmark in hand_landmarks.landmark]
                     hand_data["left" if hand_label == "Left" else "right"].append(landmarks)
 
             # Send both video and hand data
