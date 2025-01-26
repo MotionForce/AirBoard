@@ -1,4 +1,68 @@
 <script lang="ts">
+    const idToMap = {
+        // Fifth row (spacebar row)
+        "rect88": "space",   // Space
+
+        // Fourth row (ZXCV...)
+        "rect82": "/",
+        "rect81": ".",
+        "rect80": ",",
+        "rect79": "m",
+        "rect78": "n",
+        "rect77": "b",
+        "rect76": "v",
+        "rect75": "c",
+        "rect74": "x",
+        "rect73": "z",
+        "rect84": "shift",   // Shift
+
+        // Third row (ASDF...)
+        "rect71": "'",
+        "rect70": ";",
+        "rect69": "l",
+        "rect68": "k",
+        "rect67": "j",
+        "rect66": "h",
+        "rect65": "g",
+        "rect64": "f",
+        "rect63": "d",
+        "rect62": "s",
+        "rect61": "a",
+        "rect60": "⇪",   // Caps Lock
+
+        // Second row (QWERTY...)
+        "rect59": "]",
+        "rect58": "[",
+        "rect57": "p",
+        "rect56": "o",
+        "rect55": "i",
+        "rect54": "u",
+        "rect53": "y",
+        "rect52": "t",
+        "rect51": "r",
+        "rect50": "e",
+        "rect49": "w",
+        "rect48": "q",
+        "rect47": "\t",   // Tab
+
+        // First row (numbers/symbols)
+        "rect46": "🔇",  // Mute
+        "rect45": "🌐",  // Language key
+        "rect44": "⌫",  // Backspace
+        "rect43": "=",
+        "rect42": "-",
+        "rect41": "0",
+        "rect40": "9",
+        "rect39": "8",
+        "rect38": "7",
+        "rect37": "6",
+        "rect36": "5",
+        "rect35": "4",
+        "rect34": "3",
+        "rect33": "2",
+        "rect32": "1"
+    }
+
     let {color, targetId, targetColor} = $props();
 </script>
 
@@ -88,19 +152,30 @@
                                         x={rect.x}
                                         id={rect.id}
                                         stroke={color}
+                                        stroke-width="2"
                                 />
+                                <text
+                                        x={rect.x + 20}
+                                        y={rect.y + 25}
+                                        font-size="15"
+                                        fill={color}
+                                        text-anchor="middle"
+                                        style="!important;font-family: 'Roboto Slab'; font-weight: lighter;"
+                                >
+                                    {idToMap[rect.id]}
+                                </text>
                             {/if}
                         {/each}
                         {#if targetId !== "path59"}
                             <path xmlns="http://www.w3.org/2000/svg"
                                   stroke={color}
                                   d="m 1003.4,220.18 v 71.2 h -35.56 v 71.21 h 142.36 v -71.21 -71.2 z"
-                                  stroke-width="7.1205" id="path59" transform="matrix(0.56176,0,0,0.56176,14.838,17)"/>
+                                  stroke-width="3.57025" id="path59" transform="matrix(0.56176,0,0,0.56176,14.838,17)"/>
                             {:else}
                             <path xmlns="http://www.w3.org/2000/svg"
                                   stroke={targetColor}
                                   d="m 1003.4,220.18 v 71.2 h -35.56 v 71.21 h 142.36 v -71.21 -71.2 z"
-                                  stroke-width="7.1205" id="path59" transform="matrix(0.56176,0,0,0.56176,14.838,17)"/>
+                                  stroke-width="3.57025" id="path59" transform="matrix(0.56176,0,0,0.56176,14.838,17)"/>
                         {/if}
 
                         <!-- Render the selected rectangle last -->
@@ -176,7 +251,18 @@
                                         id={rect.id}
                                         stroke={targetColor}
                                         fill={targetColor}
+                                        stroke-width="2"
                                 />
+                                <text
+                                        x={rect.x + 20}
+                                        y={rect.y + 25}
+                                        font-size="15"
+                                        fill={color}
+                                        text-anchor="middle"
+                                        style="font-family: 'Roboto Slab'; font-weight: lighter;"
+                                >
+                                {idToMap[rect.id]}
+                                </text>
                             {/if}
                         {/each}
                     </g>
