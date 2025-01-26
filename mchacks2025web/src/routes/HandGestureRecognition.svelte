@@ -6,6 +6,7 @@
     let handData: { left: number[][], right: number[][] } = { left: [], right: [] };
     let isConnected = false;
     let errorMessage = '';
+    let keystrokes = '';
 
     onMount(() => {
         connectWebSocket();
@@ -34,6 +35,10 @@
                 if (data.hand_data) {
                     handData = data.hand_data;
                 }
+                if (data.keystrokes) {
+                    keystrokes = data.keystrokes;
+                    logKeystrokes(data.keystrokes);
+                }
             } catch (error) {
                 console.error('Error processing message:', error);
             }
@@ -50,6 +55,11 @@
             // Try to reconnect after 5 seconds
             setTimeout(connectWebSocket, 5000);
         };
+    }
+
+    function logKeystrokes(keystroke: string) {
+        console.log(`Keystroke logged: ${keystroke}`);
+        // Implement additional logging logic here if needed
     }
 </script>
 
