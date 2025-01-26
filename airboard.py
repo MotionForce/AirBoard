@@ -19,12 +19,12 @@ mp_drawing = mp.solutions.drawing_utils
 async def video_stream(websocket):
         while True:
             in_ret, in_frame = cap.read()
-            if not ret:
+            if not in_ret:
                 print("WARNING: Failed to capture frame!")
                 await websocket.send("FRAME_ERROR")
                 continue
 
-            _, buffer = cv2.imencode('.jpg', frame)
+            _, buffer = cv2.imencode('.jpg', in_frame)
             jpg_as_text = base64.b64encode(buffer).decode('utf-8')
 
             await websocket.send(jpg_as_text)
