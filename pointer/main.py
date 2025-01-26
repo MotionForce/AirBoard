@@ -1,3 +1,5 @@
+import os
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3' 
 import argparse
 import csv
 import math
@@ -5,8 +7,10 @@ import sys
 import time
 import cv2
 import logging
+import pyautogui as pag
+import mediapipe as mp
+import numpy as np
 
-from capture_key import process_character, get_index_tip
 
 logging.basicConfig(
     level=logging.INFO,
@@ -15,7 +19,73 @@ logging.basicConfig(
 )
 
 #DEFAULT_CHARACTERS = "a_b_c_d_e_f_g_h_i_j_k_l_m_n_o_p_q_r_s_t_u_v_w_x_y_z_space_backspace"
-DEFAULT_CHARACTERS = "a_b_c_d"
+DEFAULT_CHARACTERS = "a_b_c"
+TYPE_DELAY = 0.5
+DEPTH_THRESHOLD = 0.035
+
+last_activation_time = {
+    "Right": 100,
+    "Left": 100
+}
+
+config = {
+    "resting": {
+        5: [],
+        6: [],
+        8: [],
+    },
+    "standing": {
+        5: [],
+        6: [],
+        8: [],
+    },
+    "pressing": {
+        5: [],
+        6: [],
+        8: [],
+    },
+    "points":[
+
+    ]
+}
+
+mp_hands = mp.solutions.hands
+mp_drawing = mp.solutions.drawing_utils
+
+def get_index_tip(image: cv2.Mat, hand_count: int=1) -> list:
+    image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+
+    with mp_hands.Hands(static_image_mode=True, max_num_hands=hand_count, min_detection_confidence=0.5) as hands:
+        results = hands.process(np.array(image_rgb))
+
+    entry = []
+
+    if results.multi_hand_landmarks:
+        for hand_landmarks, handedness in zip(results.multi_hand_landmarks, results.multi_handedness):
+
+            index_tip = hand_landmarks.landmark[8]
+            palm = hand_landmarks.landmark[0]
+            entry.append([index_tip.x, index_tip.y, index_tip.z, palm.z, 0 if handedness.classification[0].label == "Left" else 1])
+    else:
+        print("No hands detected.")
+
+    return entry
+
+def get_landmarks(image: cv2.Mat, hand_count: int=1) -> list:
+    image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+
+    with mp_hands.Hands(static_image_mode=True, max_num_hands=hand_count, min_detection_confidence=0.5) as hands:
+        results = hands.process(np.array(image_rgb))
+
+    if results.multi_hand_landmarks:
+        return list(zip(results.multi_hand_landmarks, results.multi_handedness))
+    else:
+        print("No hands detected.")
+
+def process_character(image: cv2.Mat, character: str) -> list:
+    coords = get_index_tip(image)[0]
+    coords.append(character)
+    return coords
 
 def snap_picture() -> cv2.UMat:
     ret, frame_in = cap.read()
@@ -31,14 +101,6 @@ def snap_picture() -> cv2.UMat:
     # cv2.waitKey(0)
 
     return frame_in
-
-
-def write_to_csv(data: list):
-    logging.debug(data)
-    
-    with open("entries.csv", mode="a", newline="") as file:
-        writer = csv.writer(file)
-        writer.writerow(data)
     
 def load_config(file: str) -> dict:
     config = {}
@@ -73,7 +135,8 @@ def capture_character(character: str, countdown=3, repetitions=50, wait_time=5) 
         print("\nCapturing frame...")
         frame = snap_picture()
         res = process_character(frame, character)
-        write_to_csv(res)
+        config["points"].append(res)
+        
 
 
 def cycle_characters(characters: str, countdown=3, repetitions=50, wait_time=5):
@@ -101,7 +164,7 @@ if __name__ == "__main__":
     arg_parse.add_argument("--debug", type=bool, default=False, help="Enable debug logging")
     arg_parse.add_argument("--manual", type=bool, default=False, help="Enable per frame manual character capture")
     arg_parse.add_argument("--pre-cycle-wait", type=int, default=5, help="Number of seconds to wait before starting the character cycle")
-    arg_parse.add_argument("--run", type=bool, default=False, help="Whether to start using AirBoard")
+    arg_parse.add_argument("--train", type=bool, default=False, help="Whether to start using AirBoard")
     args = arg_parse.parse_args()
 
     if args.debug:
@@ -122,51 +185,95 @@ if __name__ == "__main__":
     cap.set(cv2.CAP_PROP_FRAME_HEIGHT, args.height)
     logging.debug(f"Video device resolution set to {args.width}x{args.height}")
 
-    if args.run:
-        logging.info("Starting AirBoard")
-        data = []
-        with open("entries.csv", mode="r") as file:
-            reader = csv.reader(file)
-            for row in reader:
-                data.append(row)
-        config = load_config("entries.csv")
-        while True:
-            frame = snap_picture()
-            data = get_index_tip(frame)
-            if len(data) == 0:
-                continue
-            x = data[0]
-            y = data[1]
-            z = data[2]
-            print(f"X: {x}, Y: {y}, Z: {z}")
-            min_distance = 100000
-            character = 'none'
-            for row in config["points"]:
-                distance = math.sqrt((x - float(row[0]))**2 + (y - float(row[1]))**2)
-                if distance < min_distance:
-                    min_distance = distance
-                    print(f"Z: {z}, Depth: {float(config['depth'])}")
-                    if z > float(config["depth"]):
-                        character = row[3]
-            print(character)
-            time.sleep(0.7)
-            
+    if args.train:
+        logging.warning("Place only one hand in the frame. Hide your other hand from the camera.")
 
-    else:
-        logging.info("Getting depth: place your finger at the height you want to type. The depth will be captured in 3 seconds.")
+        logging.info("Getting depth: place your hand in a resting position. Data will be captured in 3 seconds.")
         time.sleep(3)
         frame = snap_picture()
-        depth = get_index_tip(frame)[2]
-        with open("entries.csv", mode="w", newline="") as file:
-            writer = csv.writer(file)
-            writer.writerow([depth])
-        if args.manual:
-            logging.info("Starting manual character capture")
-            manual_capture(args.countdown, 1, args.pre_cycle_wait)
-        else:
-            logging.info("Starting character cycling")
-            characters_to_cycle = args.characters_to_cycle.split("_")
-            cycle_characters(characters_to_cycle, args.countdown, 1, args.pre_cycle_wait)
+        data = get_landmarks(frame, hand_count=1)
+        five = data[0][0].landmark[5].z
+        six = data[0][0].landmark[6].z
+        eight = data[0][0].landmark[8].z
+        config["resting"][5] = five
+        config["resting"][6] = six
+        config["resting"][8] = eight
+        logging.info(f"Resting depth: 5: {five}, 6: {six}, 8: {eight}")
+
+        logging.info("Getting depth: place your hand in a standing position. Data will be captured in 3 seconds.")
+        time.sleep(3)
+        frame = snap_picture()
+        data = get_landmarks(frame, hand_count=1)
+        five = data[0][0].landmark[5].z
+        six = data[0][0].landmark[6].z
+        eight = data[0][0].landmark[8].z
+        config["standing"][5] = five
+        config["standing"][6] = six
+        config["standing"][8] = eight
+        logging.info(f"Standing depth: 5: {five}, 6: {six}, 8: {eight}")
+
+        logging.info("Getting depth: place your hand in a pressing position. Data will be captured in 3 seconds.")
+        time.sleep(3)
+        frame = snap_picture()
+        data = get_landmarks(frame, hand_count=1)
+        five = data[0][0].landmark[5].z
+        six = data[0][0].landmark[6].z
+        eight = data[0][0].landmark[8].z
+        config["pressing"][5] = five
+        config["pressing"][6] = six
+        config["pressing"][8] = eight
+        logging.info(f"Pressing depth: 5: {five}, 6: {six}, 8: {eight}")
+
+        logging.info("Starting character cycling")
+        characters_to_cycle = args.characters_to_cycle.split("_")
+        cycle_characters(characters_to_cycle, args.countdown, 1, args.pre_cycle_wait)
+
+    logging.info("Starting AirBoard")
+    while True:
+        frame = snap_picture()
+        data = get_landmarks(frame, hand_count=2)
+        if not data:
+            continue
+        for hand_instance in data:
+
+            print(hand_instance)
+
+            if len(data) == 0:
+                continue
+            current_time = time.time()
+            hand = hand_instance[1].classification[0].label
+            
+            time_since_last_activation = current_time - last_activation_time[hand]
+            if time_since_last_activation < TYPE_DELAY:
+                    continue
+
+            # Update the last activation time for the hand
+            
+            x = hand_instance[0].landmark[8].x
+            y = hand_instance[0].landmark[8].y
+            zeight = hand_instance[0].landmark[8].z
+            zfive = hand_instance[0].landmark[5].z
+            zsix = hand_instance[0].landmark[6].z
+
+            flat_distance = 100000
+            depth_distance = 100000
+            depth_pos = ""
+            for i in ["resting", "standing", "pressing"]:
+                dist = abs(zfive - config[i][5]) + abs(zsix - config[i][6]) + abs(zeight - config[i][8])
+                if dist < depth_distance:
+                    depth_pos = i
+                    depth_distance = dist
+            if depth_pos == "pressing":
+                character = 'none'
+                for row in config["points"]:
+                    distance = math.sqrt((x - float(row[0]))**2 + (y - float(row[1]))**2)
+                    if distance < flat_distance:
+                        flat_distance = distance
+                        character = row[5]
+                        last_activation_time[hand] = current_time
+                pag.press(character)
+            else:
+                logging.info("Not pressing")
 
 
     cap.release()
