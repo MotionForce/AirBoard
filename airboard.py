@@ -1,8 +1,14 @@
+import asyncio
+import base64
+
 import cv2
 import mediapipe as mp
 import numpy as np
 # import tensorflow as tf
 import dearpygui.dearpygui as dpg
+import websockets
+import threading
+
 
 mp_hands = mp.solutions.hands
 mp_drawing = mp.solutions.drawing_utils
@@ -10,13 +16,39 @@ mp_drawing = mp.solutions.drawing_utils
 # model_left = tf.keras.models.load_model('models/final_left.keras')
 # model_right = tf.keras.models.load_model('models/final_right.keras')
 
+async def video_stream(websocket):
+        while True:
+            in_ret, in_frame = cap.read()
+            if not ret:
+                print("WARNING: Failed to capture frame!")
+                await websocket.send("FRAME_ERROR")
+                continue
+
+            _, buffer = cv2.imencode('.jpg', frame)
+            jpg_as_text = base64.b64encode(buffer).decode('utf-8')
+
+            await websocket.send(jpg_as_text)
+            await asyncio.sleep(1/10)
+
+async def server_main():
+    async with websockets.serve(video_stream, "localhost", 8765):
+        await asyncio.Future()  # Run forever
+
+
+def run_server():
+    asyncio.run(server_main())
+
 dpg.create_context()
 dpg.create_viewport(title='AirBoard', width=1280, height=720)
 dpg.setup_dearpygui()
 
 print("Creating video capture object...")
-cap = cv2.VideoCapture(0)
+cap = cv2.VideoCapture(1)
 ret, frame = cap.read()
+
+if not ret:
+    print("Failed to capture frame.")
+    exit(1)
 
 frame_width = int(cap.get(3))
 frame_height = int(cap.get(4))
@@ -43,6 +75,9 @@ with dpg.window(label="Key presses", width=720, height=480, pos=(450, 125)):
 
 dpg.show_metrics()
 dpg.show_viewport()
+
+server_thread = threading.Thread(target=run_server)
+server_thread.start()
 
 while dpg.is_dearpygui_running():
     ret, frame = cap.read()

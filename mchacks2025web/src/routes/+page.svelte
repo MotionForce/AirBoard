@@ -2,7 +2,7 @@
     import Tutorial from "$lib/components/Tutorial.svelte";
 
     function scrollToTutorial() {
-        document.getElementById("tutorial").scrollIntoView({ behavior: "smooth" });
+        document.getElementById("tutorial").scrollIntoView({behavior: "smooth"});
     }
 </script>
 
