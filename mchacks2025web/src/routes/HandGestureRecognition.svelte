@@ -18,7 +18,7 @@
     });
 
     function connectWebSocket() {
-        websocket = new WebSocket('ws://localhost:8000/ws');
+        websocket = new WebSocket('ws://localhost:8765');
 
         websocket.onopen = () => {
             isConnected = true;
@@ -27,13 +27,7 @@
 
         websocket.onmessage = (event) => {
             try {
-                const data = JSON.parse(event.data);
-                if (data.frame) {
-                    videoElement.src = `data:image/jpeg;base64,${data.frame}`;
-                }
-                if (data.hand_data) {
-                    handData = data.hand_data;
-                }
+                videoElement.src = `data:image/jpeg;base64,${event.data}`;
             } catch (error) {
                 console.error('Error processing message:', error);
             }
@@ -47,7 +41,6 @@
         websocket.onclose = () => {
             isConnected = false;
             errorMessage = 'WebSocket connection closed';
-            // Try to reconnect after 5 seconds
             setTimeout(connectWebSocket, 5000);
         };
     }
