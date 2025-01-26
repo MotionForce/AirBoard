@@ -3,13 +3,12 @@
     import Hand from "$lib/components/svg/Hand.svelte";
     import {onMount} from "svelte";
     import {fade} from "svelte/transition";
-    import {io} from "socket.io-client";
+    import {messages, connectWebSocket, sendMessage} from "$lib/websocket";
+    import {onMount} from "svelte";
 
     const required_keys = [
         "q", "w", "e", "r", "t", "y", "u", "i", "o", "p", "a", "s", "d", "f", "g", "h", "j", "k", "l", "z", "x", "c", "v", "b", "n", "m"
     ];
-
-    const socket = io();
 
     let current_key = $state(required_keys[0]);
 
@@ -40,32 +39,6 @@
         }
         console.log(video.getTracks()[0])
     }
-
-    // Capture and send video frames
-    function startFrameCapture() {
-        const canvas = document.createElement('canvas');
-        const ctx = canvas.getContext('2d');
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
-
-        setInterval(() => {
-            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-            const frameData = canvas.toDataURL('image/jpeg', 0.5);  // Compress to JPEG
-            socket.emit('video_frame', frameData);  // Send frame to backend
-        }, 100);  // Adjust interval (e.g., 100ms = ~10 FPS)
-    }
-
-    // Send messages
-    function sendMessage(input) {
-        const msg = input.value;
-        socket.emit('message', msg);  // Send message to backend
-        input.value = '';
-    }
-
-    // Handle server responses
-    socket.on('response', (msg) => {
-        console.log("Server says:", msg);
-    });
 
     onMount(() => {
         // Access webcam
@@ -120,8 +93,6 @@
                     </div>
                     <div class="mt-3 animate-button {!loaded ? 'pause' : ''}">
                         <button class="border-2 p-4 text-xl rounded-md bg-white" onclick={() => {
-                            startFrameCapture();
-                            sendMessage(current_key);
                             if (required_keys.indexOf(current_key) === required_keys.length - 1) {
                                 tutorial_ended = true;
                             } else {
