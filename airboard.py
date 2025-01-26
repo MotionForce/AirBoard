@@ -43,7 +43,7 @@ dpg.create_viewport(title='AirBoard', width=1280, height=720)
 dpg.setup_dearpygui()
 
 print("Creating video capture object...")
-cap = cv2.VideoCapture(1)
+cap = cv2.VideoCapture(0)
 ret, frame = cap.read()
 
 if not ret:

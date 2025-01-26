@@ -10,6 +10,14 @@
     src: url('/fonts/Nunito-VariableFont_wght.ttf') format('truetype');
 }
 
+@font-face {
+    font-family: 'Roboto Slab';
+    font-style: normal;
+    font-weight: 100 900;
+    font-display: swap;
+    src: url('/fonts/RobotoSlab-VariableFont_wght.ttf') format('truetype');
+}
+
 body {
-    font-family: 'Nunito', sans-serif;
+    font-family: 'Roboto Slab', sans-serif;
 }
