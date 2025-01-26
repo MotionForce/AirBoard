@@ -18,7 +18,7 @@
     });
 
     function connectWebSocket() {
-        websocket = new WebSocket('ws://localhost:8000/ws');
+        websocket = new WebSocket('ws://localhost:8765');
 
         websocket.onopen = () => {
             isConnected = true;
