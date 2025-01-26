@@ -1,10 +1,15 @@
-<script>
+<script lang="ts">
     import Tutorial from "$lib/components/Tutorial.svelte";
+    import HandGestureRecognition from './HandGestureRecognition.svelte';
 
     function scrollToTutorial() {
         document.getElementById("tutorial").scrollIntoView({behavior: "smooth"});
     }
 </script>
+
+<main class="min-h-screen bg-gray-50">
+    <HandGestureRecognition />
+</main>
 
 <div class="flex flex-col space-y-2 p-10 py-64 items-center align-middle bg-[#9CADBC]">
     <h1 class="text-9xl tracking-wide">AirBoard</h1>
